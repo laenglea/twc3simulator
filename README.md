@@ -33,6 +33,7 @@ for this edit the script and set the proper ip address
 to run it native you have to first install the requirements with pip or your package manager
 
 native:
+
     pip3 install -r requirements.txt
     sudo uvicorn app.main:app --reload --host 0.0.0.0 --port 80
 
