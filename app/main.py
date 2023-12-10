@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import requests
+import os
 
 app = FastAPI()
 
@@ -35,7 +36,8 @@ class Vitals(BaseModel):
 
 
 def get_tasmota_current():
-    url = "http://172.16.90.72/cm?cmnd=status%208"
+    tasmota_ip = os.getenv('TASMOTA_IP', '172.16.90.72')
+    url = f"http://{tasmota_ip}/cm?cmnd=status%208"
     #{"StatusSNS":{"Time":"1970-01-01T17:54:20","ANALOG":{"Temperature":15.0},"ENERGY":{"TotalStartTime":"1970-01-01T00:00:00","Total":2.361,"Yesterday":0.000,"Today":2.361,"Power":2,"ApparentPower":13,"ReactivePower":12,"Factor":0.17,"Voltage":225,"Current":0.056},"TempUnit":"C"}}
     try:
         response = requests.get(url)

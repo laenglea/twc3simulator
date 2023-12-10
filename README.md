@@ -42,4 +42,8 @@ via docker:
     docker build -t twc3simulator .
     docker run --name twc3simulator -p 80:80 twc3simulator
     
+## validate
 
+if it's running properly you should get something back when looking at
+
+http://<ip>/api/1/vitals
