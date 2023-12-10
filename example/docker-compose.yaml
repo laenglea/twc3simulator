@@ -1,0 +1,25 @@
+version: "3"
+services:
+  twc3sim:
+    container_name: twc3sim
+    image: laenglea/twc3simulator
+    environment:
+      - "TASMOTA_IP=172.16.90.72"
+    restart: unless-stopped
+
+  evcc:
+    command:
+      - evcc
+    container_name: evcc
+    image: evcc/evcc
+    ports:
+      - 7070:7070/tcp
+      - 8887:8887/tcp
+      - 7090:7090/udp
+      - 9522:9522/udp
+    depends_on:
+      - twc3sim
+    volumes:
+      - ./evcc.yaml:/etc/evcc.yaml
+      - ./data:/root/.evcc
+    restart: unless-stopped

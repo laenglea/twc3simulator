@@ -39,9 +39,20 @@ native:
 
 via docker:
 
-    docker build -t twc3simulator .
-    docker run --name twc3simulator -p 80:80 twc3simulator
+    docker run --name twc3simulator -p 80:80 -e TASMOTA_IP=10.10.10.10 laenglea/twc3simulator
     
+or as part of your evcc so you could access it via port 80 without exposint this port at all just with the name of the container 
+
+    services:
+    twc3sim:
+      container_name: twc3sim
+      image: laenglea/twc3simulator
+      environment:
+        - "TASMOTA_IP=172.16.90.72"
+      restart: unless-stopped
+      
+full example in the example folder
+
 ## validate
 
 if it's running properly you should get something back when looking at
