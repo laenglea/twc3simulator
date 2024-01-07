@@ -5,6 +5,8 @@ import os
 
 app = FastAPI()
 
+tasmota_ip = os.getenv('TASMOTA_IP', '172.16.90.72')
+
 # Define the data structure
 class Vitals(BaseModel):
     contactor_closed: bool
@@ -35,8 +37,7 @@ class Vitals(BaseModel):
     current_alerts: list
 
 
-def get_tasmota_current():
-    tasmota_ip = os.getenv('TASMOTA_IP', '172.16.90.72')
+def get_tasmota_current(tasmota_ip):
     url = f"http://{tasmota_ip}/cm?cmnd=status%208"
     #{"StatusSNS":{"Time":"1970-01-01T17:54:20","ANALOG":{"Temperature":15.0},"ENERGY":{"TotalStartTime":"1970-01-01T00:00:00","Total":2.361,"Yesterday":0.000,"Today":2.361,"Power":2,"ApparentPower":13,"ReactivePower":12,"Factor":0.17,"Voltage":225,"Current":0.056},"TempUnit":"C"}}
     try:
@@ -47,19 +48,37 @@ def get_tasmota_current():
     except requests.RequestException as e:
         raise ValueError(f"Error fetching data from Tasmota device: {e}")
 
+def get_tasmota_connected(tasmota_ip):
+    url = f"http://{tasmota_ip}/cm?cmnd=status%200"
+    #{"Status":{'Module': 46, 'DeviceName': 'tm_gangOG', 'FriendlyName': [''], 'Topic': 'tasmota_12C771', 'ButtonTopic': '0', 'Power': 1, 'PowerOnState': 3, 'LedState': 1, 'LedMask': 'FFFF', 'SaveData': 1, 'SaveState': 1, 'SwitchTopic': '0', 'SwitchMode': [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'ButtonRetain': 0, 'SwitchRetain': 0, 'SensorRetain': 0, 'PowerRetain': 0, 'InfoRetain': 0, 'StateRetain': 0, 'StatusRetain': 0}
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        if data["Status"]["Power"] == 1:
+            power = True
+        else:
+            power = False
+        return power
+    except requests.RequestException as e:
+        raise ValueError(f"Error fetching data from Tasmota device: {e}")
 @app.get("/api/1/vitals")
 async def get_vitals():
     try:
-        current = get_tasmota_current()
+        current = get_tasmota_current(tasmota_ip)
     except ValueError as e:
         return {"error": str(e)}
     if current <= 4.5:
         charging = False
     else:
         charging = True
+    try:
+        connected = get_tasmota_connected(tasmota_ip)
+    except ValueError as e:
+        return {"error": str(e)}
     vitals = Vitals(
         contactor_closed=charging,
-        vehicle_connected=True,
+        vehicle_connected=connected,
         session_s=0,
         grid_v=229.2,
         grid_hz=49.828,
